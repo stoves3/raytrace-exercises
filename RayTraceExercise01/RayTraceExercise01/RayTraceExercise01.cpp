@@ -1,24 +1,8 @@
-// RayTraceExercise01.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
 #include <iostream>
+#include "camera.h"
 #include "sphere.h"
 #include "hitable_list.h"
 #include "float.h"
-
-//float hit_sphere(const vec3& center, float radius, const ray& r) {
-//	vec3 oc = r.origin() - center;
-//	float a = dot(r.direction(), r.direction());
-//	float b = 2.0 * dot(oc, r.direction());
-//	float c = dot(oc, oc) - radius * radius;
-//	float discriminant = b * b - 4 * a * c;
-//	if (discriminant < 0) {
-//		return -1.0;
-//	}
-//	else {
-//		return (-b - sqrt(discriminant)) / (2.0 * a);
-//	}
-//}
 
 vec3 color(const ray& r, hitable *world) {
 	hit_record rec;
@@ -36,34 +20,33 @@ int main()
 {
 	int nx = 200;
 	int ny = 100;
+	int ns = 100;
 
 	std::cout << "P3\n" << nx << " " << ny << "\n255\n";
-	vec3 lower_left_corner(-2.0, -1.0, -1.0);
-	vec3 horizontal(4.0, 0.0, 0.0);
-	vec3 vertical(0.0, 2.0, 0.0);
-	vec3 origin(0.0, 0.0, 0.0);
+
 	hitable* list[2];
 	list[0] = new sphere(vec3(0, 0, -1), 0.5);
 	list[1] = new sphere(vec3(0, -100.5, -1), 100);
+
 	hitable* world = new hitable_list(list, 2);
+	camera cam;
+
 	for (int j = ny-1; j >= 0; j--)
 	{
 		for (int i = 0; i < nx; i++)
 		{
-			float u = float(i) / float(nx);
-			float v = float(j) / float(ny);
-			ray r(origin, lower_left_corner + u * horizontal + v * vertical);
+			vec3 col(0, 0, 0);
+			for (int s = 0; s < ns; s++)
+			{
+				float u = float(i + (rand() / (RAND_MAX + 1.0))) / float(nx);
+				float v = float(j + (rand() / (RAND_MAX + 1.0))) / float(ny);
 
-			/*float r = float(i) / float(nx);
-			float g = float(j) / float(ny);
-			float b = 0.2;*/
-			//vec3 col(float(i) / float(nx), float(j) / float(ny), 0.2);
-			vec3 p = r.point_at_parameter(2.0);
-			vec3 col = color(r, world);
+				ray r = cam.get_ray(u, v);
+				vec3 p = r.point_at_parameter(2.0);
+				col += color(r, world);
+			}
+			col /= float(ns);
 
-			/*int ir = int(255.99 * r);
-			int ig = int(255.99 * g);
-			int ib = int(255.99 * b);*/
 			int ir = int(255.99 * col[0]);
 			int ig = int(255.99 * col[1]);
 			int ib = int(255.99 * col[2]);
@@ -71,14 +54,3 @@ int main()
 		}
 	}
 }
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
